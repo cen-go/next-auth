@@ -1,5 +1,6 @@
 "use client";
 
+import { redirect, useSearchParams } from "next/navigation";
 import { useTransition, useState } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
@@ -23,6 +24,12 @@ import FormError from "../form-error";
 function LoginForm() {
   const [error, setError] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error")
+  if (urlError === "OAuthAccountNotLinked") {
+    redirect("/auth/error");
+  }
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),

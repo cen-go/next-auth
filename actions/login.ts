@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import { AuthError } from "next-auth";
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 
 import { loginSchema } from "@/schemas";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
@@ -32,4 +32,8 @@ export async function loginAction(values: z.infer<typeof loginSchema>) {
     }
     throw error;
   }
+}
+
+export async function signOutAction() {
+  await signOut()
 }
