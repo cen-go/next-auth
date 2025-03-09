@@ -20,9 +20,11 @@ import {
 import CardWrapper from "./card-wrapper";
 import { Button } from "../ui/button";
 import FormError from "../form-error";
+import FormSuccess from "../form-success";
 
 function LoginForm() {
   const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
 
   const searchParams = useSearchParams();
@@ -41,9 +43,11 @@ function LoginForm() {
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
     setError("");
+    setSuccess("");
     startTransition(() => {
       loginAction(values).then((data) => {
         setError(data?.error);
+        setSuccess(data?.success);
       });
     });
   }
@@ -91,6 +95,7 @@ function LoginForm() {
             />
           </div>
           <FormError message={error} />
+          <FormSuccess message={success} />
           <Button type="submit" className="w-full" disabled={isPending}>
             Login
           </Button>
