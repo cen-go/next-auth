@@ -10,7 +10,7 @@ export default function FormError({ message }: FormErrorProps) {
   }
 
   return (
-    <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
+    <div className="bg-destructive/10 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
       <BsExclamationTriangle className="w-4 h-4"/>
       <p>{message}</p>
     </div>
