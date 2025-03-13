@@ -23,3 +23,12 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     html: `<p>Click <a href=${resetLink}><strong style="color: #7373FF;">here</strong></a> to reset your password!</p>`,
   });
 }
+
+export async function sendTwoFactorTokenEmail(email:string, token:string) {
+  await resend.emails.send({
+    from: "onboarding@resend.dev",
+    to: "cengiz.uxdesign@gmail.com", // will be changed with email parameter in production
+    subject: "2FA Code",
+    html: `<p>Your code is: <strong style="color: #7373FF; font-size: 1.1rem;">${token}</strong></p>`,
+  });
+}
