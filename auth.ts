@@ -1,4 +1,4 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import authConfig from "./auth.config";
 
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -6,14 +6,16 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "./lib/db";
 import { getUserById } from "./data/user";
 import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
+import { UserRole } from "@prisma/client";
+import { getAccountByUserId } from "./data/account";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      role: "ADMIN" | "USER";
-    } & DefaultSession["user"];
-  }
-}
+// declare module "next-auth" {
+//   interface Session {
+//     user: {
+//       role: "ADMIN" | "USER";
+//     } & DefaultSession["user"];
+//   }
+// }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
@@ -48,27 +50,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return true;
     },
+    async session({ session, token }) {
+      if (session.user && token.sub) session.user.id = token.sub;
+      if (session.user) {
+        session = {
+          ...session,
+          user: {
+            ...session.user,
+            name: token.name,
+            email: token.email as string,
+            role: token.role as UserRole,
+            isTwoFactorEnabled: token.isTwoFactorEnabled as boolean,
+            isOAuth: token.isOAuth as boolean,
+          },
+        };
+      }
+      return session;
+    },
     async jwt({ token }) {
       if (!token.sub) return token;
 
       const existingUser = await getUserById(token.sub);
       if (!existingUser) return token;
 
+      const existingAccount = await getAccountByUserId(existingUser.id);
+
+      token.isOAuth = !!existingAccount;
+      token.name = existingUser.name;
+      token.email = existingUser.email;
       token.role = existingUser.role;
+      token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
       return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.sub) session.user.id = token.sub;
-      if (token.role && session.user) {
-        return {
-          ...session,
-          user: {
-            ...session.user,
-            role: token.role,
-          },
-        };
-      }
-      return session;
     },
   },
   adapter: PrismaAdapter(db),

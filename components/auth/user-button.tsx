@@ -13,7 +13,7 @@ export default function UserButton() {
     <DropdownMenu>
       <DropdownMenuTrigger >
         <Avatar className="cursor-pointer">
-          <AvatarImage src={user?.image || ""} />
+          <AvatarImage src={user?.image || undefined} />
           <AvatarFallback>
             <FaUserCircle  className="w-10 h-10 text-indigo-400"/>
           </AvatarFallback>

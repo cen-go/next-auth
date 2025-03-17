@@ -11,8 +11,8 @@ export default function Navbar() {
   return (
     <nav className="bg-secondary p-4 rounded-xl w-[600px] flex justify-between items-center shadow-sm">
       <div className="flex gap-x-2">
-      <Button asChild variant={pathname === "/erver" ? "default" : "outline"}>
-          <Link href="/erver">Server</Link>
+      <Button asChild variant={pathname === "/server" ? "default" : "outline"}>
+          <Link href="/server">Server</Link>
         </Button>
         <Button asChild variant={pathname === "/client" ? "default" : "outline"}>
           <Link href="/client">Client</Link>
