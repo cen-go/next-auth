@@ -31,6 +31,7 @@ function LoginForm() {
   const [isPending, startTransition] = useTransition();
 
   const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const urlError = searchParams.get("error");
   if (urlError === "OAuthAccountNotLinked") {
     redirect("/auth/error");
@@ -49,7 +50,7 @@ function LoginForm() {
     setError("");
     setSuccess("");
     startTransition(() => {
-      loginAction(values).then((data) => {
+      loginAction(values, callbackUrl).then((data) => {
         if (data?.error) setError(data?.error);
         if (data?.success) setSuccess(data?.success);
         if (data?.twoFactor) setShowTwoFactor(true);

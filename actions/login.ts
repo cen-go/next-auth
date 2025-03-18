@@ -21,7 +21,11 @@ interface StatusMessage {
   twoFactor?: boolean;
 }
 
-export async function loginAction(values: z.infer<typeof loginSchema>): Promise<StatusMessage> {
+export async function loginAction(
+  values: z.infer<typeof loginSchema>,
+  callbackUrl?: string | null
+): Promise<StatusMessage> {
+
   const validatedFields = loginSchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -32,12 +36,17 @@ export async function loginAction(values: z.infer<typeof loginSchema>): Promise<
   const existingUser = await getUserByEmail(email);
 
   if (!existingUser || !existingUser.email || !existingUser.password) {
-    return {error: "Invalid credentials!"};
+    return { error: "Invalid credentials!" };
   }
 
   if (!existingUser.emailVerified) {
-    const verificationToken = await generateVerificationToken(existingUser.email);
-    await sendVerificationEmail(verificationToken.email, verificationToken.token);
+    const verificationToken = await generateVerificationToken(
+      existingUser.email
+    );
+    await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token
+    );
     return {
       error: "Email not verified!",
       success: "Sent the verification email again.",
@@ -46,43 +55,46 @@ export async function loginAction(values: z.infer<typeof loginSchema>): Promise<
 
   if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {
-      const existingTwoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
+      const existingTwoFactorToken = await getTwoFactorTokenByEmail(
+        existingUser.email
+      );
 
       if (!existingTwoFactorToken) {
-        return {error: "Invalid code!"};
+        return { error: "Invalid code!" };
       }
 
       if (existingTwoFactorToken.token !== code) {
-        return {error: "Invalid code!"};
+        return { error: "Invalid code!" };
       }
 
       const hasExpired = new Date(existingTwoFactorToken.expires) < new Date();
 
       if (hasExpired) {
         await db.twoFactorToken.delete({
-          where: { id: existingTwoFactorToken.id}
+          where: { id: existingTwoFactorToken.id },
         });
-        return {error: "Code has expired!"};
+        return { error: "Code has expired!" };
       }
 
-
-      const existingConfirmation = await getTwoFactorConfirmationByUserId(existingUser.id);
+      const existingConfirmation = await getTwoFactorConfirmationByUserId(
+        existingUser.id
+      );
 
       if (existingConfirmation) {
         await db.twoFactorConfirmation.delete({
-          where: {id: existingConfirmation.id}
+          where: { id: existingConfirmation.id },
         });
       }
 
       await db.twoFactorConfirmation.create({
         data: {
-          userId: existingUser.id
-        }
+          userId: existingUser.id,
+        },
       });
     } else {
       const twoFactorToken = await generateTwoFactorToken(existingUser.email);
       await sendTwoFactorTokenEmail(twoFactorToken.email, twoFactorToken.token);
-      return {twoFactor: true, success: "2FA code sent."};
+      return { twoFactor: true, success: "2FA code sent." };
     }
   }
 
@@ -90,7 +102,7 @@ export async function loginAction(values: z.infer<typeof loginSchema>): Promise<
     await signIn("credentials", {
       email,
       password,
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -103,7 +115,7 @@ export async function loginAction(values: z.infer<typeof loginSchema>): Promise<
     }
     throw error;
   }
-  return {success: "Login successful."}
+  return { success: "Login successful." };
 }
 
 export async function signOutAction() {
